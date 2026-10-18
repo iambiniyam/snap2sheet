@@ -9,7 +9,7 @@ Photograph a receipt or invoice. snap2sheet extracts the merchant, date, total, 
 
 ![snap2sheet web UI](docs/demo.png)
 
-Status: v0.2.0. RapidOCR is the default fallback. Indra OCR is optional, faster, and more accurate on merchant text. Review the rows before you file them.
+Status: v0.2.1. RapidOCR is the default fallback. Indra OCR is optional, faster, and more accurate on merchant text. Review the rows before you file them.
 
 ## Why
 
@@ -24,6 +24,7 @@ It also runs in batch. Point it at a folder and you get one spreadsheet instead 
 - Added optional Indra OCR alongside RapidOCR.
 - Added a subtotal and tax consistency check that fixes corrupted totals.
 - Added a 12-receipt field extraction benchmark.
+- Labelled every review field for screen readers.
 
 ## What it extracts
 

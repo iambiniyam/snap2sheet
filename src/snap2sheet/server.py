@@ -19,7 +19,7 @@ OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 STATIC = Path(__file__).resolve().parent / "static"
 ALLOWED = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tif", ".tiff", ".pdf"}
 
-app = FastAPI(title="snap2sheet", version="0.2.0")
+app = FastAPI(title="snap2sheet", version="0.2.1")
 app.mount("/static", StaticFiles(directory=STATIC), name="static")
 
 

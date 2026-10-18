@@ -144,12 +144,12 @@ function renderRows() {
       const confidence = Math.round((Number(receipt.confidence) || 0) * 100);
       return `<tr data-key="${receipt.key}">
         <td data-label="File">${escapeHtml(receipt.file)}</td>
-        <td data-label="Merchant"><input class="cell merchant" data-field="merchant" value="${escapeHtml(receipt.merchant || "")}"></td>
-        <td data-label="Date"><input class="cell date" data-field="date" value="${escapeHtml(receipt.date || "")}"></td>
-        <td data-label="Total"><input class="cell total" data-field="total" inputmode="decimal" value="${receipt.total == null ? "" : receipt.total}"></td>
-        <td data-label="Tax"><input class="cell tax" data-field="tax" inputmode="decimal" value="${receipt.tax == null ? "" : receipt.tax}"></td>
-        <td data-label="Currency"><input class="cell currency" data-field="currency" maxlength="3" value="${escapeHtml(receipt.currency || "")}"></td>
-        <td data-label="Invoice"><input class="cell invoice" data-field="invoice_number" value="${escapeHtml(receipt.invoice_number || "")}"></td>
+        <td data-label="Merchant"><input class="cell merchant" data-field="merchant" aria-label="Merchant for ${escapeHtml(receipt.file)}" value="${escapeHtml(receipt.merchant || "")}"></td>
+        <td data-label="Date"><input class="cell date" data-field="date" aria-label="Date for ${escapeHtml(receipt.file)}" value="${escapeHtml(receipt.date || "")}"></td>
+        <td data-label="Total"><input class="cell total" data-field="total" aria-label="Total for ${escapeHtml(receipt.file)}" inputmode="decimal" value="${receipt.total == null ? "" : receipt.total}"></td>
+        <td data-label="Tax"><input class="cell tax" data-field="tax" aria-label="Tax for ${escapeHtml(receipt.file)}" inputmode="decimal" value="${receipt.tax == null ? "" : receipt.tax}"></td>
+        <td data-label="Currency"><input class="cell currency" data-field="currency" aria-label="Currency for ${escapeHtml(receipt.file)}" maxlength="3" value="${escapeHtml(receipt.currency || "")}"></td>
+        <td data-label="Invoice"><input class="cell invoice" data-field="invoice_number" aria-label="Invoice number for ${escapeHtml(receipt.file)}" value="${escapeHtml(receipt.invoice_number || "")}"></td>
         <td data-label="Confidence" class="conf">${confidence}%</td>
         <td><button class="remove-row" type="button" data-key="${receipt.key}">Remove</button></td>
       </tr>`;

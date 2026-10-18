@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1 - 2026-10-18
+
+- Label every review field for screen readers.
+- No behavior change.
+
 ## 0.2.0 - 2026-10-18
 
 - Rebuilt the web interface with multi-file drag and drop, editable review, validation, CSV export, and Excel export.
