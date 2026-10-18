@@ -35,7 +35,7 @@ ALLOWED = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tif", ".tiff", ".pdf"}
 MAX_UPLOAD = 15 * 1024 * 1024
 MAX_FILES = 20
 
-app = FastAPI(title="snap2sheet", version="0.2.6")
+app = FastAPI(title="snap2sheet", version="0.2.7")
 app.mount("/static", StaticFiles(directory=STATIC), name="static")
 
 

@@ -9,7 +9,7 @@ Photograph a receipt or invoice. snap2sheet extracts the merchant, date, total, 
 
 ![snap2sheet web UI](docs/demo.png)
 
-Status: v0.2.6. RapidOCR is the default fallback. Indra OCR is optional, faster, and more accurate on merchant text. Review the rows before you file them.
+Status: v0.2.7. RapidOCR is the default fallback. Indra OCR is optional, faster, and more accurate on merchant text. Review the rows before you file them.
 
 ## Why
 
@@ -154,7 +154,7 @@ The default path is fully offline and deterministic. The optional LLM pass can r
 
 ## Accuracy and limits
 
-The benchmark uses clean, generated receipts. Real receipts are harder. RapidOCR reads `$` but drops `€` and `£` on this fixture font, so currency remains a manual field for those receipts:
+The benchmark uses clean, generated receipts. Real receipts are harder. RapidOCR reads `$` but drops `€` and `£` on this fixture font, so currency remains a manual field for those receipts. The UI now receives an explicit `currency not detected; set it manually` warning:
 
 - crumpled, faded, thermal paper, or skewed photos
 - handwritten totals and tips
@@ -180,7 +180,7 @@ See [docs/performance.md](docs/performance.md) for measured timings and limits.
 pytest -q
 ```
 
-The suite has 24 tests, including a Playwright/axe browser check of the initial and result states. and covers amount parsing, date order, row grouping, extraction, CSV, Excel, duplicate normalization, the CLI batch output, and the web scan response.
+The suite has 25 tests, including a Playwright/axe browser check of the initial and result states. and covers amount parsing, date order, row grouping, extraction, CSV, Excel, duplicate normalization, the CLI batch output, and the web scan response.
 
 ## Roadmap
 

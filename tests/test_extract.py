@@ -45,3 +45,11 @@ def test_extract_fixture():
     assert len(receipt.items) == 2
     assert receipt.items[0]["description"] == "Latte"
     assert receipt.items[0]["quantity"] == 2
+
+
+def test_missing_currency_warns_for_review():
+    from snap2sheet.extract import extract_receipt
+
+    receipt = extract_receipt("scan.png", ["HARVEST TABLE", "TOTAL 20.90"])
+    assert receipt.currency is None
+    assert any("currency not detected" in warning for warning in receipt.warnings)

@@ -226,6 +226,8 @@ def extract_receipt(
     else:
         receipt_total_corrected = False
     currency, warnings = _currency(rows, total_currency)
+    if currency is None:
+        warnings.append("currency not detected; set it manually")
     invoice_number = _invoice(rows)
     date = parse_date(text, order=order)
 

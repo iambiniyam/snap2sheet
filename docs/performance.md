@@ -21,6 +21,6 @@ Field accuracy:
 | Currency | 0.333 |
 | Tax | 0.833 |
 
-Merchant improved after the fixture generator switched to a font with proper word spacing. Currency is still weak because RapidOCR drops `€` and `£` while reading `$`. The benchmark now skips an OCR backend that is not installed instead of crashing, so it runs with RapidOCR alone.
+Merchant improved after the fixture generator switched to a font with proper word spacing. Currency is still weak because RapidOCR drops `€` and `£` while reading `$`; missing currency now produces an explicit manual-review warning. The benchmark now skips an OCR backend that is not installed instead of crashing, so it runs with RapidOCR alone.
 
 Indra is optional and faster, but is not installed in this environment.
