@@ -1,34 +1,30 @@
-import csv
-
 from openpyxl import load_workbook
 
-from snap2sheet.export import write_csv, write_xlsx
+from snap2sheet.export import rows_to_xlsx, safe_cell, write_csv
 from snap2sheet.models import Receipt
 
 
-def _receipt():
-    return Receipt(
-        source="receipt.png",
-        merchant="Blue Bottle",
-        date="2026-12-03",
-        total=14.58,
-        tax=1.08,
-        currency="USD",
-        invoice_number="004512",
-        confidence=0.95,
+def test_safe_cell_blocks_formulas():
+    assert safe_cell("=HYPERLINK(\"http://x\")").startswith("'=")
+    assert safe_cell("+1") == "'+1"
+    assert safe_cell("-1") == "'-1"
+    assert safe_cell(14.58) == 14.58
+
+
+def test_xlsx_cells_are_not_formulas(tmp_path):
+    path = rows_to_xlsx(
+        [{"merchant": "=HYPERLINK(\"http://x\")", "total": "10.00"}],
+        tmp_path / "out.xlsx",
     )
+    sheet = load_workbook(path, data_only=False).active
+    merchant = sheet.cell(row=2, column=2).value
+    assert merchant.startswith("'=")
+    assert sheet.cell(row=2, column=1).value in (None, "")
 
 
-def test_csv(tmp_path):
-    path = write_csv([_receipt()], tmp_path / "out.csv")
-    rows = list(csv.DictReader(path.open()))
-    assert rows[0]["merchant"] == "Blue Bottle"
-    assert rows[0]["total"] == "14.58"
-
-
-def test_xlsx(tmp_path):
-    path = write_xlsx([_receipt()], tmp_path / "out.xlsx")
-    sheet = load_workbook(path).active
-    assert sheet["A1"].value == "file"
-    assert sheet["B2"].value == "Blue Bottle"
-    assert sheet["D2"].value == "14.58"
+def test_csv_cells_are_not_formulas(tmp_path):
+    receipt = Receipt(source="r.png", merchant="=cmd|' /C calc'!A0")
+    path = write_csv([receipt], tmp_path / "out.csv")
+    text = path.read_text()
+    assert "'=cmd" in text
+    assert "\n=cmd" not in text

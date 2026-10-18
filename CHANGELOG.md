@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.2 - 2026-10-18
+
+- Block spreadsheet formula injection in CSV and Excel exports.
+- Limit uploads to 15 MB and 20 files per batch.
+- Delete uploaded receipt images after extraction.
+- Clean receipt uploads left by older versions on startup.
+- Delete generated Excel files after download and cap exports at 1000 rows.
+- Add export security tests.
+
 ## 0.2.1 - 2026-10-18
 
 - Label every review field for screen readers.

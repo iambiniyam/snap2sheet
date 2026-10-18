@@ -79,9 +79,8 @@ def _rapid_lines(image: np.ndarray) -> list[TextLine]:
 def _indra_lines(image: np.ndarray) -> list[TextLine]:
     threads = int(os.getenv("SNAP2SHEET_INDRA_THREADS", "2"))
     converter = _indra(str(indra_dir()), threads)
-    handle = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
-    path = Path(handle.name)
-    handle.close()
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as handle:
+        path = Path(handle.name)
     try:
         if not cv2.imwrite(str(path), image):
             raise OCRUnavailable("could not prepare the image for Indra OCR")

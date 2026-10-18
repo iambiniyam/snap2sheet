@@ -11,6 +11,16 @@ from openpyxl.utils import get_column_letter
 
 from .models import Receipt
 
+DANGEROUS_PREFIXES = ("=", "+", "-", "@", "\t", "\r")
+
+
+def safe_cell(value: object) -> object:
+    """Prevent spreadsheet formula injection without changing numbers."""
+    if isinstance(value, str) and value.startswith(DANGEROUS_PREFIXES):
+        return "'" + value
+    return value
+
+
 COLUMNS = [
     "file",
     "merchant",
@@ -32,7 +42,7 @@ def write_csv(receipts: list[Receipt], path: Path | str) -> Path:
         writer = csv.DictWriter(handle, fieldnames=COLUMNS)
         writer.writeheader()
         for receipt in receipts:
-            writer.writerow(receipt.to_row())
+            writer.writerow({key: safe_cell(value) for key, value in receipt.to_row().items()})
     return path
 
 
@@ -49,7 +59,7 @@ def rows_to_xlsx(rows: list[dict[str, object]], path: Path | str) -> Path:
         cell.font = header_font
         cell.fill = header_fill
     for row in rows:
-        sheet.append([row.get(column, "") for column in COLUMNS])
+        sheet.append([safe_cell(row.get(column, "")) for column in COLUMNS])
     widths = {"file": 28, "merchant": 30, "date": 12, "total": 10, "tax": 10,
               "currency": 9, "invoice_number": 16, "items": 7, "confidence": 11, "warnings": 45}
     for index, column in enumerate(COLUMNS, start=1):

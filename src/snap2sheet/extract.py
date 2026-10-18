@@ -16,13 +16,13 @@ MONEY = re.compile(
     re.IGNORECASE,
 )
 
-TOTAL = re.compile(r"\b(grand\s+total|total\s+due|amount\s+due|balance\s+due|total)\b", re.I)
-EXCLUDE_TOTAL = re.compile(r"\b(subtotal|sub-total|tax|vat|gst|hst|discount|items|qty)\b", re.I)
-TAX = re.compile(r"\b(vat|tax|gst|hst|sales\s+tax)\b", re.I)
-SUBTOTAL = re.compile(r"\b(subtotal|sub-total|net\s+total)\b", re.I)
+TOTAL = re.compile(r"\b(grand\s+total|total\s+due|amount\s+due|balance\s+due|total)\b", re.IGNORECASE)
+EXCLUDE_TOTAL = re.compile(r"\b(subtotal|sub-total|tax|vat|gst|hst|discount|items|qty)\b", re.IGNORECASE)
+TAX = re.compile(r"\b(vat|tax|gst|hst|sales\s+tax)\b", re.IGNORECASE)
+SUBTOTAL = re.compile(r"\b(subtotal|sub-total|net\s+total)\b", re.IGNORECASE)
 INVOICE = re.compile(
     r"\b(?:invoice|inv|receipt|bill|order)\s*(?:#|no\.?|number|id)?\s*[:\-]?\s*([A-Z0-9][A-Z0-9\-/]{2,})",
-    re.I,
+    re.IGNORECASE,
 )
 ITEM = re.compile(r"^(?P<desc>.+?)\s+(?P<amount>-?\d+[.,]\d{2})\s*$")
 QUANTITY = re.compile(r"^(?P<qty>\d+)\s*[xX\u00d7]\s*(?P<rest>.+)$")
@@ -31,7 +31,7 @@ SKIP_MERCHANT = re.compile(
     r"(receipt|invoice|tax\s+invoice|tel|phone|www|http|thank|welcome|date|"
     r"cash|visa|mastercard|amex|card|change|subtotal|total|tax|vat|gst|"
     r"address|street|road|avenue|ave\.?|suite|floor|box|order\s*#)",
-    re.I,
+    re.IGNORECASE,
 )
 
 SYMBOLS = {"$": "USD", "€": "EUR", "£": "GBP", "¥": "JPY", "₹": "INR"}
@@ -46,14 +46,12 @@ def parse_amount(raw: str) -> float:
             value = value.replace(".", "").replace(",", ".")
         else:
             value = value.replace(",", "")
+    elif "," in value and len(value.rsplit(",", 1)[-1]) == 2:
+        value = value.replace(".", "").replace(",", ".")
     elif "," in value:
-        if len(value.rsplit(",", 1)[-1]) == 2:
-            value = value.replace(".", "").replace(",", ".")
-        else:
-            value = value.replace(",", "")
-    elif "." in value:
-        if len(value.rsplit(".", 1)[-1]) != 2:
-            value = value.replace(".", "")
+        value = value.replace(",", "")
+    elif "." in value and len(value.rsplit(".", 1)[-1]) != 2:
+        value = value.replace(".", "")
     return float(value)
 
 
@@ -143,7 +141,7 @@ def _subtotal(rows: list[str]) -> float | None:
 
 def _tax(rows: list[str]) -> float | None:
     for row in rows:
-        if TAX.search(row) and not re.search(r"tax\s+invoice", row, re.I):
+        if TAX.search(row) and not re.search(r"tax\s+invoice", row, re.IGNORECASE):
             amount, _currency = find_amount(row)
             if amount is not None:
                 return amount
@@ -182,7 +180,7 @@ def _currency(rows: list[str], explicit: str | None) -> tuple[str | None, list[s
 def _items(rows: list[str]) -> list[dict[str, object]]:
     items: list[dict[str, object]] = []
     for row in rows:
-        if TOTAL.search(row) or TAX.search(row) or re.search(r"subtotal|change|cash|visa|mastercard", row, re.I):
+        if TOTAL.search(row) or TAX.search(row) or re.search(r"subtotal|change|cash|visa|mastercard", row, re.IGNORECASE):
             continue
         match = ITEM.match(row)
         if not match:

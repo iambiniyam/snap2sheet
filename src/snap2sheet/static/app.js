@@ -261,7 +261,9 @@ document.addEventListener("keydown", (event) => {
 });
 
 function csvEscape(value) {
-  return `"${String(value == null ? "" : value).replaceAll('"', '""')}"`;
+  let text = String(value == null ? "" : value);
+  if (/^[=+\-@\t\r]/.test(text)) text = `'${text}`;
+  return `"${text.replaceAll('"', '""')}"`;
 }
 
 csvButton.addEventListener("click", () => {

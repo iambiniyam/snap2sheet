@@ -24,7 +24,7 @@ class LLMSettings:
     timeout: float = 45.0
 
     @classmethod
-    def from_env(cls) -> "LLMSettings":
+    def from_env(cls) -> LLMSettings:
         return cls(
             base_url=os.getenv("SNAP2SHEET_LLM_BASE_URL", "https://api.deepseek.com").rstrip("/"),
             api_key=os.getenv("SNAP2SHEET_LLM_API_KEY", ""),
@@ -67,7 +67,7 @@ def extract_with_llm(text: str, settings: LLMSettings) -> dict[str, object]:
     content = re.sub(r"^```(?:json)?|```$", "", content.strip(), flags=re.MULTILINE).strip()
     data = json.loads(content)
     if not isinstance(data, dict):
-        raise ValueError("LLM did not return a JSON object")
+        raise TypeError("LLM did not return a JSON object")
     return data
 
 

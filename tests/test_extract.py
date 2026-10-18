@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from snap2sheet.extract import extract_file, parse_amount, parse_date
-from snap2sheet.ocr import group_rows, TextLine
+from snap2sheet.ocr import TextLine, group_rows
 
 FIXTURE = Path(__file__).parent / "fixtures" / "receipt.png"
 
