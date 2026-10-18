@@ -1,5 +1,8 @@
 # snap2sheet
 
+[![ci](https://github.com/iambiniyam/snap2sheet/actions/workflows/ci.yml/badge.svg)](https://github.com/iambiniyam/snap2sheet/actions/workflows/ci.yml)
+[![license: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
 Turn receipt photos into a spreadsheet.
 
 Photograph a receipt or invoice. snap2sheet extracts the merchant, date, total, tax, currency, invoice number, and line items. Then it exports a CSV or Excel file. Everything runs locally.
