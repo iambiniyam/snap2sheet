@@ -9,7 +9,7 @@ Photograph a receipt or invoice. snap2sheet extracts the merchant, date, total, 
 
 ![snap2sheet web UI](docs/demo.png)
 
-Status: v0.2.4. RapidOCR is the default fallback. Indra OCR is optional, faster, and more accurate on merchant text. Review the rows before you file them.
+Status: v0.2.5. RapidOCR is the default fallback. Indra OCR is optional, faster, and more accurate on merchant text. Review the rows before you file them.
 
 ## Why
 
@@ -176,11 +176,10 @@ Euro and pound symbols can be misread. The currency field is editable for that r
 pytest -q
 ```
 
-The suite has 21 tests and covers amount parsing, date order, row grouping, extraction, CSV, Excel, duplicate normalization, the CLI batch output, and the web scan response.
+The suite has 22 tests and covers amount parsing, date order, row grouping, extraction, CSV, Excel, duplicate normalization, the CLI batch output, and the web scan response.
 
 ## Roadmap
 
-- multi-page invoices
 - tip and discount handling
 - category suggestions from line items
 - a mobile-friendly PWA

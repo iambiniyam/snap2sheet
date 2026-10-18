@@ -94,15 +94,35 @@ def _indra_lines(image: np.ndarray) -> list[TextLine]:
         path.unlink(missing_ok=True)
 
 
+MAX_PDF_PAGES = 5
+PAGE_GAP = 24
+
+
 def _render_pdf(path: Path, dpi: int = 200) -> np.ndarray:
+    """Render up to five pages into one tall OCR image."""
     document = fitz.open(path)
     if len(document) == 0:
         raise ValueError("PDF has no pages")
-    page = document[0]
-    pixmap = page.get_pixmap(dpi=dpi, colorspace=fitz.csRGB, alpha=False)
-    image = np.frombuffer(pixmap.samples, dtype=np.uint8).reshape(pixmap.height, pixmap.width, 3)
+    pages: list[np.ndarray] = []
+    for index, page in enumerate(document):
+        if index >= MAX_PDF_PAGES:
+            break
+        pixmap = page.get_pixmap(dpi=dpi, colorspace=fitz.csRGB, alpha=False)
+        image = np.frombuffer(pixmap.samples, dtype=np.uint8).reshape(
+            pixmap.height, pixmap.width, 3
+        )
+        pages.append(cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
     document.close()
-    return cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+    if not pages:
+        raise ValueError("PDF has no readable pages")
+    width = max(page.shape[1] for page in pages)
+    height = sum(page.shape[0] for page in pages) + PAGE_GAP * (len(pages) - 1)
+    canvas = np.full((height, width, 3), 255, dtype=np.uint8)
+    top = 0
+    for page in pages:
+        canvas[top : top + page.shape[0], : page.shape[1]] = page
+        top += page.shape[0] + PAGE_GAP
+    return canvas
 
 
 def load_image(path: Path | str, dpi: int = 200) -> np.ndarray:

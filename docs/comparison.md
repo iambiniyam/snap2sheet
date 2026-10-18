@@ -12,6 +12,7 @@
 - CSV and XLSX output with formula-injection protection.
 - Duplicate detection that keeps the duplicate visible instead of silently dropping it.
 - QuickBooks and Xero CSV presets.
+- Multi-page PDFs are OCRed together instead of only the first page.
 - No account, upload, or subscription.
 
 ## Tradeoff
