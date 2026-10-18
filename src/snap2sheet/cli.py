@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 from pathlib import Path
 
@@ -10,6 +9,8 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
+from . import __version__
+from .dedupe import annotate_duplicates, count_duplicates
 from .export import write_csv, write_xlsx
 from .extract import extract_file
 from .llm import LLMSettings, refine
@@ -18,11 +19,25 @@ from .ocr import backend_status
 app = typer.Typer(add_completion=False, help="Turn receipt photos into CSV or Excel, offline.")
 console = Console()
 
+
+@app.callback(invoke_without_command=True)
+def _root(
+    version: bool = typer.Option(False, "--version", is_eager=True, help="Show the version and exit."),
+) -> None:
+    if version:
+        console.print(__version__)
+        raise typer.Exit()
+
+
 ALLOWED = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tif", ".tiff", ".pdf"}
 
 
 def _table(receipts) -> Table:
-    table = Table(title=f"snap2sheet · {len(receipts)} receipt(s)")
+    duplicates = count_duplicates(receipts)
+    title = f"snap2sheet · {len(receipts)} receipt(s)"
+    if duplicates:
+        title += f" · {duplicates} possible duplicate(s)"
+    table = Table(title=title)
     table.add_column("File", no_wrap=True)
     table.add_column("Merchant")
     table.add_column("Date")
@@ -30,6 +45,7 @@ def _table(receipts) -> Table:
     table.add_column("Tax", justify="right")
     table.add_column("Cur")
     table.add_column("Conf", justify="right")
+    table.add_column("Dup", justify="center")
     for receipt in receipts:
         table.add_row(
             receipt.source,
@@ -39,6 +55,7 @@ def _table(receipts) -> Table:
             f"{receipt.tax:.2f}" if receipt.tax is not None else "-",
             receipt.currency or "-",
             f"{receipt.confidence:.2f}",
+            "yes" if receipt.duplicate else "-",
         )
     return table
 
@@ -91,18 +108,17 @@ def batch(
         console.print("[red]No receipt images or PDFs found.[/red]")
         raise typer.Exit(code=1)
 
-    receipts = []
-    seen: dict[str, str] = {}
-    for path in files:
-        digest = hashlib.sha256(path.read_bytes()).hexdigest()
-        if digest in seen:
-            console.print(f"[yellow]skip duplicate:[/yellow] {path.name} (same as {seen[digest]})")
-            continue
-        seen[digest] = path.name
-        receipts.append(_scan(path, order, llm, ocr))
+    receipts = [_scan(path, order, llm, ocr) for path in files]
+    annotate_duplicates(receipts)
 
     write_csv(receipts, output)
     console.print(_table(receipts))
+    for receipt in receipts:
+        if receipt.duplicate:
+            console.print(
+                f"[yellow]possible duplicate:[/yellow] {receipt.source} "
+                f"matches {receipt.duplicate_of} (merchant, date, total)"
+            )
     console.print(f"[green]CSV:[/green] {output}")
     if xlsx:
         write_xlsx(receipts, xlsx)

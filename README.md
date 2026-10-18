@@ -9,9 +9,11 @@ Photograph a receipt or invoice. snap2sheet extracts the merchant, date, total, 
 
 ![snap2sheet web UI](docs/demo.png)
 
-Status: v0.2.2. RapidOCR is the default fallback. Indra OCR is optional, faster, and more accurate on merchant text. Review the rows before you file them.
+Status: v0.2.3. RapidOCR is the default fallback. Indra OCR is optional, faster, and more accurate on merchant text. Review the rows before you file them.
 
 ## Why
+
+See [how this compares](docs/comparison.md) with cloud expense tools and open receipt parsers.
 
 Freelancers, small shops, and families all end up with a pile of receipts. Most expense apps upload every photo and charge a monthly fee. snap2sheet reads the receipt on your machine and gives you a file you own.
 
@@ -100,12 +102,27 @@ snap2sheet batch ./receipts -o expenses.csv --llm
 - an editable table for merchant, date, total, tax, currency, and invoice number
 - inline validation for numbers and dates
 - a running total per currency
+- duplicate badges for rows that match an earlier receipt on merchant, date, and total
 - CSV and Excel export
 - loading, empty, and error states
 - automatic dark mode and reduced-motion support
 - keyboard access and visible focus
 
 The page has no external fonts, scripts, or CDNs.
+
+## Duplicate detection
+
+Batch scans and multi-file web scans compare every receipt with the earlier rows in the same batch. The comparison key is:
+
+- merchant, normalized for case, accents, punctuation, and spacing
+- date, normalized to ISO format
+- total, normalized to two decimals
+
+The first receipt keeps the key. Each later match stays in the output and is marked with `duplicate: yes` and `duplicate_of: <original file>`. CSV and Excel exports include `duplicate` and `duplicate_of` columns, the CLI adds a Dup column and a note, and the web UI shows a Duplicate badge under the file name. Nothing is dropped silently.
+
+Missing fields are handled conservatively. If the merchant, date, or total is missing or invalid, the row is never marked as a duplicate. Ambiguous numeric dates such as `03/04/2026` are not guessed, so those rows are not matched either. The same merchant and total on a different date is a different receipt.
+
+Limits: detection happens within one batch or one web scan; it does not remember receipts from earlier runs. OCR mistakes in merchant, date, or total can hide a duplicate or split a real one. Editing or removing a row in the review table does not rerun detection for the current batch. Review the marked rows before filing.
 
 ## How it works
 
@@ -159,11 +176,10 @@ Euro and pound symbols can be misread. The currency field is editable for that r
 pytest -q
 ```
 
-The suite has 11 tests covering amount parsing, date order, row grouping, extraction, CSV, and Excel.
+The suite has 20 tests and covers amount parsing, date order, row grouping, extraction, CSV, Excel, duplicate normalization, the CLI batch output, and the web scan response.
 
 ## Roadmap
 
-- duplicate receipt detection across batches
 - multi-page invoices
 - tip and discount handling
 - category suggestions from line items

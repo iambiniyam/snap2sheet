@@ -17,6 +17,8 @@ class Receipt:
     items: list[dict[str, object]] = field(default_factory=list)
     confidence: float = 0.0
     warnings: list[str] = field(default_factory=list)
+    duplicate: bool = False
+    duplicate_of: str | None = None
     raw_text: str = field(default="", repr=False)
 
     def to_row(self) -> dict[str, object]:
@@ -31,6 +33,8 @@ class Receipt:
             "items": len(self.items),
             "confidence": f"{self.confidence:.2f}",
             "warnings": "; ".join(self.warnings),
+            "duplicate": "yes" if self.duplicate else "",
+            "duplicate_of": self.duplicate_of or "",
         }
 
     def to_dict(self) -> dict[str, object]:
@@ -45,4 +49,6 @@ class Receipt:
             "items": self.items,
             "confidence": round(self.confidence, 3),
             "warnings": self.warnings,
+            "duplicate": self.duplicate,
+            "duplicate_of": self.duplicate_of,
         }

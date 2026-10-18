@@ -48,10 +48,7 @@ function addFiles(files) {
       setStatus(`${file.name} is larger than 15 MB and was skipped.`, true);
       continue;
     }
-    const duplicate = state.files.some(
-      (item) => item.name === file.name && item.size === file.size
-    );
-    if (!duplicate) state.files.push(file);
+    state.files.push(file);
   }
   renderFileList();
 }
@@ -132,18 +129,41 @@ function totalLabel(receipts) {
     .join(" · ");
 }
 
+function countDuplicates() {
+  let count = 0;
+  for (const receipt of state.receipts.values()) {
+    if (receipt.duplicate) count += 1;
+  }
+  return count;
+}
+
 function updateSummary() {
   const count = state.receipts.size;
   const totals = totalLabel(state.receipts);
-  summary.textContent = `${count} receipt${count === 1 ? "" : "s"}${totals ? ` · ${totals}` : ""}`;
+  const duplicates = countDuplicates();
+  const parts = [`${count} receipt${count === 1 ? "" : "s"}`];
+  if (duplicates) {
+    parts.push(`${duplicates} possible duplicate${duplicates === 1 ? "" : "s"}`);
+  }
+  if (totals) parts.push(totals);
+  summary.textContent = parts.join(" · ");
+}
+
+function duplicateBadge(receipt) {
+  const original = receipt.duplicate_of ? ` of ${escapeHtml(receipt.duplicate_of)}` : "";
+  const hint = receipt.duplicate_of
+    ? `Same merchant, date, and total as ${escapeHtml(receipt.duplicate_of)}`
+    : "Same merchant, date, and total as an earlier receipt";
+  return `<span class="dupe-badge" title="${hint}">Duplicate${original}</span>`;
 }
 
 function renderRows() {
   rowsBody.innerHTML = Array.from(state.receipts.values())
     .map((receipt) => {
       const confidence = Math.round((Number(receipt.confidence) || 0) * 100);
-      return `<tr data-key="${receipt.key}">
-        <td data-label="File">${escapeHtml(receipt.file)}</td>
+      const duplicate = Boolean(receipt.duplicate);
+      return `<tr data-key="${receipt.key}"${duplicate ? ' class="row-duplicate"' : ""}>
+        <td data-label="File"><span class="file-label">${escapeHtml(receipt.file)}</span>${duplicate ? duplicateBadge(receipt) : ""}</td>
         <td data-label="Merchant"><input class="cell merchant" data-field="merchant" aria-label="Merchant for ${escapeHtml(receipt.file)}" value="${escapeHtml(receipt.merchant || "")}"></td>
         <td data-label="Date"><input class="cell date" data-field="date" aria-label="Date for ${escapeHtml(receipt.file)}" value="${escapeHtml(receipt.date || "")}"></td>
         <td data-label="Total"><input class="cell total" data-field="total" aria-label="Total for ${escapeHtml(receipt.file)}" inputmode="decimal" value="${receipt.total == null ? "" : receipt.total}"></td>
@@ -206,6 +226,8 @@ function readRows() {
     values.items = Array.isArray(receipt.items) ? receipt.items.length : 0;
     values.confidence = receipt.confidence || 0;
     values.warnings = Array.isArray(receipt.warnings) ? receipt.warnings.join("; ") : "";
+    values.duplicate = receipt.duplicate ? "yes" : "";
+    values.duplicate_of = receipt.duplicate_of || "";
     return values;
   });
 }
@@ -241,7 +263,12 @@ async function scan() {
     renderRows();
     validate();
     resultTitle.focus();
-    setStatus("Done. Fix any field that looks wrong, then export.");
+    const duplicates = countDuplicates();
+    setStatus(
+      duplicates
+        ? `Done. ${duplicates} possible duplicate${duplicates === 1 ? "" : "s"} marked. Fix any field that looks wrong, then export.`
+        : "Done. Fix any field that looks wrong, then export."
+    );
   } catch (error) {
     setStatus(error.message, true);
   } finally {
@@ -279,6 +306,8 @@ csvButton.addEventListener("click", () => {
     "items",
     "confidence",
     "warnings",
+    "duplicate",
+    "duplicate_of",
   ];
   const rows = readRows();
   const lines = [columns.join(",")].concat(

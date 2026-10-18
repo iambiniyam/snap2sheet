@@ -10,6 +10,8 @@
   --accent-soft: #e7f0ea;
   --accent-ink: #ffffff;
   --danger: #a3322b;
+  --warn: #8a5a00;
+  --warn-soft: #fdf3dc;
   --focus: #0b63ce;
   --radius: 16px;
   --radius-sm: 10px;
@@ -29,6 +31,8 @@
     --accent-soft: #1e3a2b;
     --accent-ink: #0c1711;
     --danger: #ff8a80;
+    --warn: #f0c368;
+    --warn-soft: #362c16;
     --focus: #7cb7ff;
     --shadow: 0 10px 30px rgb(0 0 0 / 35%);
   }
@@ -410,6 +414,45 @@ td:first-child {
   white-space: nowrap;
   color: var(--muted);
   font-size: 0.75rem;
+}
+
+td:first-child .file-label {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dupe-badge {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 1px 8px;
+  border: 1px solid var(--warn);
+  border-radius: 999px;
+  background: var(--warn-soft);
+  color: var(--warn);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+tr.row-duplicate td {
+  background: color-mix(in srgb, var(--warn) 6%, transparent);
+}
+
+tr.row-duplicate td:first-child {
+  box-shadow: inset 3px 0 0 var(--warn);
+}
+
+.dupe-help {
+  margin-top: 10px;
+}
+
+.dupe-help strong {
+  color: var(--warn);
 }
 
 .cell {

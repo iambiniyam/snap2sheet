@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
   <title>snap2sheet: receipts to spreadsheet</title>
-  <link rel="stylesheet" href="/static/app.css?v=4">
-  <script src="/static/app.js?v=4" defer></script>
+  <link rel="stylesheet" href="/static/app.css?v=5">
+  <script src="/static/app.js?v=5" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -65,7 +65,7 @@
 
       <div class="card">
         <div class="table-wrap">
-          <table>
+          <table aria-describedby="duplicate-help">
             <thead>
               <tr>
                 <th>File</th>
@@ -82,6 +82,7 @@
             <tbody id="rows"></tbody>
           </table>
         </div>
+        <p id="duplicate-help" class="note dupe-help">A <strong>Duplicate</strong> badge means another receipt in this batch has the same merchant, date, and total. Duplicate rows stay in the export until you remove them.</p>
         <p id="validation" class="validation" role="status" aria-live="polite"></p>
       </div>
 

@@ -32,6 +32,8 @@ COLUMNS = [
     "items",
     "confidence",
     "warnings",
+    "duplicate",
+    "duplicate_of",
 ]
 
 
@@ -61,7 +63,8 @@ def rows_to_xlsx(rows: list[dict[str, object]], path: Path | str) -> Path:
     for row in rows:
         sheet.append([safe_cell(row.get(column, "")) for column in COLUMNS])
     widths = {"file": 28, "merchant": 30, "date": 12, "total": 10, "tax": 10,
-              "currency": 9, "invoice_number": 16, "items": 7, "confidence": 11, "warnings": 45}
+              "currency": 9, "invoice_number": 16, "items": 7, "confidence": 11,
+              "warnings": 45, "duplicate": 11, "duplicate_of": 28}
     for index, column in enumerate(COLUMNS, start=1):
         sheet.column_dimensions[get_column_letter(index)].width = widths.get(column, 14)
     sheet.freeze_panes = "A2"

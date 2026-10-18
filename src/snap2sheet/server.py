@@ -12,6 +12,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from starlette.background import BackgroundTask
 
+from .dedupe import annotate_duplicates, count_duplicates
 from .export import rows_to_xlsx
 from .extract import extract_file
 from .ocr import OCRUnavailable, backend_status
@@ -34,7 +35,7 @@ ALLOWED = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tif", ".tiff", ".pdf"}
 MAX_UPLOAD = 15 * 1024 * 1024
 MAX_FILES = 20
 
-app = FastAPI(title="snap2sheet", version="0.2.2")
+app = FastAPI(title="snap2sheet", version="0.2.3")
 app.mount("/static", StaticFiles(directory=STATIC), name="static")
 
 
@@ -86,8 +87,15 @@ async def scan(
             ) from exc
         finally:
             path.unlink(missing_ok=True)
-        receipts.append(receipt.to_dict())
-    return JSONResponse({"receipts": receipts})
+        receipts.append(receipt)
+
+    annotate_duplicates(receipts)
+    return JSONResponse(
+        {
+            "receipts": [receipt.to_dict() for receipt in receipts],
+            "duplicate_count": count_duplicates(receipts),
+        }
+    )
 
 
 @app.post("/api/export.xlsx")
