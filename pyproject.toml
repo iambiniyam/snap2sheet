@@ -1,6 +1,6 @@
 [project]
 name = "snap2sheet"
-version = "0.2.3"
+version = "0.2.4"
 description = "Turn receipt and invoice photos into clean CSV or Excel, offline."
 readme = "README.md"
 requires-python = ">=3.10"

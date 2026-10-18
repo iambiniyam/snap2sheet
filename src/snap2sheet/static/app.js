@@ -11,6 +11,7 @@ const rowsBody = document.getElementById("rows");
 const validation = document.getElementById("validation");
 const csvButton = document.getElementById("csv");
 const xlsxButton = document.getElementById("xlsx");
+const presetSelect = document.getElementById("preset");
 
 const MAX_BYTES = 15 * 1024 * 1024;
 const state = { files: [], receipts: new Map() };
@@ -293,30 +294,40 @@ function csvEscape(value) {
   return `"${text.replaceAll('"', '""')}"`;
 }
 
+const GENERIC_COLUMNS = [
+  "file", "merchant", "date", "total", "tax", "currency",
+  "invoice_number", "items", "confidence", "warnings", "duplicate", "duplicate_of",
+];
+
+function presetRow(row, preset) {
+  if (preset === "generic") return row;
+  const merchant = row.merchant || "";
+  const description = merchant ? `${merchant} receipt` : "Receipt";
+  const reference = row.invoice_number || row.file || "";
+  if (preset === "quickbooks") {
+    return { Date: row.date, Description: description, Amount: row.total, Currency: row.currency, Reference: reference };
+  }
+  return { Date: row.date, Amount: row.total, Payee: merchant, Description: description, Reference: reference, Currency: row.currency };
+}
+
+function presetColumns(preset) {
+  if (preset === "quickbooks") return ["Date", "Description", "Amount", "Currency", "Reference"];
+  if (preset === "xero") return ["Date", "Amount", "Payee", "Description", "Reference", "Currency"];
+  return GENERIC_COLUMNS;
+}
+
 csvButton.addEventListener("click", () => {
   if (!validate()) return;
-  const columns = [
-    "file",
-    "merchant",
-    "date",
-    "total",
-    "tax",
-    "currency",
-    "invoice_number",
-    "items",
-    "confidence",
-    "warnings",
-    "duplicate",
-    "duplicate_of",
-  ];
-  const rows = readRows();
+  const preset = presetSelect.value;
+  const columns = presetColumns(preset);
+  const rows = readRows().map((row) => presetRow(row, preset));
   const lines = [columns.join(",")].concat(
     rows.map((row) => columns.map((column) => csvEscape(row[column])).join(","))
   );
   const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
-  link.download = "expenses.csv";
+  link.download = `expenses-${preset}.csv`;
   link.click();
   URL.revokeObjectURL(link.href);
 });
@@ -326,7 +337,7 @@ xlsxButton.addEventListener("click", async () => {
   const response = await fetch("/api/export.xlsx", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ rows: readRows() }),
+    body: JSON.stringify({ rows: readRows(), preset: presetSelect.value }),
   });
   if (!response.ok) {
     setStatus("Excel export failed. Try CSV instead.", true);
@@ -335,7 +346,7 @@ xlsxButton.addEventListener("click", async () => {
   const blob = await response.blob();
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
-  link.download = "expenses.xlsx";
+  link.download = `expenses-${presetSelect.value}.xlsx`;
   link.click();
   URL.revokeObjectURL(link.href);
 });

@@ -682,3 +682,7 @@ tr.row-duplicate td:first-child {
     transition-duration: 0.01ms !important;
   }
 }
+
+.preset-field { display: grid; gap: 4px; margin-top: 12px; max-width: 320px; }
+.preset-field label { color: var(--muted); font-size: .75rem; font-weight: 600; }
+.preset-field select { min-height: 40px; padding: 0 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); font: inherit; font-size: .875rem; }

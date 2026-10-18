@@ -100,6 +100,7 @@ def batch(
     llm: bool = typer.Option(False, "--llm"),
     ocr: str = typer.Option("auto", "--ocr", help="auto, rapidocr, or indra."),
     recursive: bool = typer.Option(False, "--recursive", "-r"),
+    preset: str = typer.Option("generic", "--preset", help="generic, quickbooks, or xero"),
 ) -> None:
     """Scan a folder of receipts and write CSV (and optionally Excel)."""
     files = sorted(folder.rglob("*") if recursive else folder.iterdir())
@@ -111,7 +112,11 @@ def batch(
     receipts = [_scan(path, order, llm, ocr) for path in files]
     annotate_duplicates(receipts)
 
-    write_csv(receipts, output)
+    try:
+        write_csv(receipts, output, preset=preset)
+    except ValueError as exc:
+        console.print(f"[red]{exc}[/red]")
+        raise typer.Exit(code=2) from exc
     console.print(_table(receipts))
     for receipt in receipts:
         if receipt.duplicate:
@@ -121,7 +126,7 @@ def batch(
             )
     console.print(f"[green]CSV:[/green] {output}")
     if xlsx:
-        write_xlsx(receipts, xlsx)
+        write_xlsx(receipts, xlsx, preset=preset)
         console.print(f"[green]XLSX:[/green] {xlsx}")
 
 

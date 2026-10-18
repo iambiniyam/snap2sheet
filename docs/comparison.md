@@ -11,6 +11,7 @@
 - A local batch scanner with deterministic parsing and optional local LLM refinement.
 - CSV and XLSX output with formula-injection protection.
 - Duplicate detection that keeps the duplicate visible instead of silently dropping it.
+- QuickBooks and Xero CSV presets.
 - No account, upload, or subscription.
 
 ## Tradeoff

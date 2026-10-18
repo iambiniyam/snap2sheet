@@ -35,12 +35,13 @@ ALLOWED = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tif", ".tiff", ".pdf"}
 MAX_UPLOAD = 15 * 1024 * 1024
 MAX_FILES = 20
 
-app = FastAPI(title="snap2sheet", version="0.2.3")
+app = FastAPI(title="snap2sheet", version="0.2.4")
 app.mount("/static", StaticFiles(directory=STATIC), name="static")
 
 
 class ExportRequest(BaseModel):
     rows: list[dict[str, object]]
+    preset: str = "generic"
 
 
 @app.get("/")
@@ -104,7 +105,10 @@ def export_xlsx(request: ExportRequest) -> FileResponse:
         raise HTTPException(status_code=413, detail="too many rows (max 1000)")
     name = f"{uuid.uuid4().hex}.xlsx"
     path = OUTPUT_DIR / name
-    rows_to_xlsx(request.rows, path)
+    try:
+        rows_to_xlsx(request.rows, path, preset=request.preset)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     return FileResponse(
         path,
         filename="expenses.xlsx",

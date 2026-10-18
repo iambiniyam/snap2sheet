@@ -28,3 +28,24 @@ def test_csv_cells_are_not_formulas(tmp_path):
     text = path.read_text()
     assert "'=cmd" in text
     assert "\n=cmd" not in text
+
+
+def test_accounting_presets(tmp_path):
+    receipt = Receipt(
+        source="r.png",
+        merchant="Blue Bottle",
+        date="2026-03-12",
+        total=14.58,
+        currency="USD",
+        invoice_number="004512",
+    )
+    quickbooks = write_csv([receipt], tmp_path / "quickbooks.csv", preset="quickbooks")
+    assert quickbooks.read_text().splitlines()[0] == "Date,Description,Amount,Currency,Reference"
+    assert "Blue Bottle receipt" in quickbooks.read_text()
+
+    xero = write_csv([receipt], tmp_path / "xero.csv", preset="xero")
+    assert xero.read_text().splitlines()[0] == "Date,Amount,Payee,Description,Reference,Currency"
+    assert "Blue Bottle" in xero.read_text()
+
+    sheet = load_workbook(rows_to_xlsx([receipt.to_row()], tmp_path / "xero.xlsx", preset="xero")).active
+    assert [cell.value for cell in sheet[1]] == ["Date", "Amount", "Payee", "Description", "Reference", "Currency"]
