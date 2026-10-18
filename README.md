@@ -139,6 +139,12 @@ The suite has 8 tests covering amount parsing, date order, row grouping, extract
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
 
+## Related tools
+
+- [shamba](https://github.com/iambiniyam/shamba): offline plant health scanner for gardeners and farmers.
+- [redact](https://github.com/iambiniyam/redact): offline PII redaction for PDFs and photos.
+- [find-local](https://github.com/iambiniyam/find-local): offline semantic search for files, PDFs, and photos.
+
 ## License
 
 MIT. See [THIRD_PARTY.md](THIRD_PARTY.md) for the OCR and PDF dependencies.
