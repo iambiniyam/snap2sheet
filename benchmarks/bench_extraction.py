@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import time
 from pathlib import Path
 
 from snap2sheet.extract import extract_file
+from snap2sheet.ocr import OCRUnavailable
 
 HERE = Path(__file__).resolve().parent
 RECEIPTS = HERE / "receipts"
@@ -25,19 +27,26 @@ def score(actual, expected, field: str) -> bool:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--backends", default="rapidocr,indra")
+    args = parser.parse_args()
     truth = {row["file"]: row for row in json.loads((RECEIPTS / "ground_truth.json").read_text())}
     results = []
-    for backend in ("rapidocr", "indra"):
+    for backend in [item.strip() for item in args.backends.split(",") if item.strip()]:
         correct = {field: 0 for field in FIELDS}
         started = time.perf_counter()
         rows = 0
-        for name, expected in truth.items():
-            path = RECEIPTS / name
-            receipt = extract_file(path, source=name, ocr_backend=backend)
-            rows += 1
-            for field in FIELDS:
-                if score(getattr(receipt, field), expected[field], field):
-                    correct[field] += 1
+        try:
+            for name, expected in truth.items():
+                path = RECEIPTS / name
+                receipt = extract_file(path, source=name, ocr_backend=backend)
+                rows += 1
+                for field in FIELDS:
+                    if score(getattr(receipt, field), expected[field], field):
+                        correct[field] += 1
+        except OCRUnavailable as exc:
+            results.append({"backend": backend, "skipped": str(exc)})
+            continue
         elapsed = round(time.perf_counter() - started, 2)
         results.append(
             {

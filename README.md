@@ -170,6 +170,10 @@ Euro and pound symbols can be misread. The currency field is editable for that r
 - Uploaded receipts are deleted after extraction. Generated Excel files are deleted after download.
 - The optional LLM pass sends OCR text only, never the image.
 
+## Performance
+
+See [docs/performance.md](docs/performance.md) for measured timings and limits.
+
 ## Tests
 
 ```bash
