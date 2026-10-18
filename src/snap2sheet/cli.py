@@ -32,11 +32,11 @@ def _table(receipts) -> Table:
     for receipt in receipts:
         table.add_row(
             receipt.source,
-            receipt.merchant or "—",
-            receipt.date or "—",
-            f"{receipt.total:.2f}" if receipt.total is not None else "—",
-            f"{receipt.tax:.2f}" if receipt.tax is not None else "—",
-            receipt.currency or "—",
+            receipt.merchant or "-",
+            receipt.date or "-",
+            f"{receipt.total:.2f}" if receipt.total is not None else "-",
+            f"{receipt.tax:.2f}" if receipt.tax is not None else "-",
+            receipt.currency or "-",
             f"{receipt.confidence:.2f}",
         )
     return table

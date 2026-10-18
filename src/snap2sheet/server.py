@@ -23,7 +23,7 @@ INDEX_HTML = """<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>snap2sheet — receipts to spreadsheet</title>
+<title>snap2sheet: receipts to spreadsheet</title>
 <style>
   :root { color-scheme: light dark; --ink:#17211b; --paper:#f7f5ec; --green:#1f7a4d; --line:#ddd7c6; }
   * { box-sizing:border-box; }
@@ -54,7 +54,7 @@ INDEX_HTML = """<!doctype html>
 <body>
 <header>
   <h1>snap2sheet</h1>
-  <p class="sub">Point. Snap. Spreadsheet. Everything runs locally — receipts never leave this machine.</p>
+  <p class="sub">Point. Snap. Spreadsheet. Everything runs locally. Receipts never leave this machine.</p>
 </header>
 <main>
   <div class="card">
@@ -80,7 +80,7 @@ function cell(value, field) { return `<input class="cell" data-field="${field}" 
 
 scan.addEventListener('click', async () => {
   if (!input.files.length) { status.textContent = 'Choose at least one file.'; return; }
-  scan.disabled = true; status.textContent = 'Reading receipts locally…'; out.innerHTML = '';
+  scan.disabled = true; status.textContent = 'Reading receipts locally...'; out.innerHTML = '';
   const fd = new FormData();
   for (const f of input.files) fd.append('files', f);
   try {

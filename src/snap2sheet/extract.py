@@ -24,7 +24,7 @@ INVOICE = re.compile(
     re.I,
 )
 ITEM = re.compile(r"^(?P<desc>.+?)\s+(?P<amount>-?\d+[.,]\d{2})\s*$")
-QUANTITY = re.compile(r"^(?P<qty>\d+)\s*[xX×]\s*(?P<rest>.+)$")
+QUANTITY = re.compile(r"^(?P<qty>\d+)\s*[xX\u00d7]\s*(?P<rest>.+)$")
 
 SKIP_MERCHANT = re.compile(
     r"(receipt|invoice|tax\s+invoice|tel|phone|www|http|thank|welcome|date|"
@@ -164,7 +164,7 @@ def _currency(rows: list[str], explicit: str | None) -> tuple[str | None, list[s
     for symbol, code in SYMBOLS.items():
         if symbol in text:
             if symbol == "$":
-                warnings.append("currency assumed USD from '$' — verify")
+                warnings.append("currency assumed USD from '$'. Verify.")
             return code, warnings
     return None, warnings
 
@@ -236,7 +236,7 @@ def extract_receipt(
     if date is None:
         receipt.warnings.append("date not found")
     if total is None:
-        receipt.warnings.append("total not found — check manually")
+        receipt.warnings.append("total not found. Check manually.")
     if ocr_confidence < 0.85:
         score -= 0.10
         receipt.warnings.append(f"low OCR confidence ({ocr_confidence:.2f})")

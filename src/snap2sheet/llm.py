@@ -87,5 +87,5 @@ def refine(receipt: Receipt, settings: LLMSettings) -> Receipt:
         value = data.get(key)
         if isinstance(value, (int, float)):
             setattr(receipt, key, round(float(value), 2))
-    receipt.warnings.append("fields refined by LLM — verify")
+    receipt.warnings.append("fields refined by LLM. Verify.")
     return receipt

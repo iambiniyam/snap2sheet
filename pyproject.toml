@@ -34,6 +34,11 @@ dev = ["pytest>=8.3", "ruff>=0.6", "httpx2"]
 [project.scripts]
 snap2sheet = "snap2sheet.cli:app"
 
+[project.urls]
+Homepage = "https://github.com/iambiniyam/snap2sheet"
+Repository = "https://github.com/iambiniyam/snap2sheet"
+Issues = "https://github.com/iambiniyam/snap2sheet/issues"
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"

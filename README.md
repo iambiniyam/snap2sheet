@@ -1,34 +1,31 @@
 # snap2sheet
 
-**Point. Snap. Spreadsheet.**
+Turn receipt photos into a spreadsheet.
 
-Photograph a receipt or invoice. Get a clean row: merchant, date, total, tax, currency, invoice number, and line items — exported to CSV or Excel. Everything runs on your machine; receipts never leave it.
-
-> Status: early MVP. Heuristics on top of OCR, with an optional LLM pass for messy receipts. Review before you file.
+Photograph a receipt or invoice. snap2sheet extracts the merchant, date, total, tax, currency, invoice number, and line items. Then it exports a CSV or Excel file. Everything runs locally.
 
 ![snap2sheet web UI](docs/demo.png)
 
+Status: early MVP. The default path uses OCR plus heuristics. An optional LLM pass handles messy receipts. Review the rows before you file them.
+
 ## Why
 
-Expense tracking is tedious everywhere: freelancers, small shops, NGOs, families. The dominant apps are cloud subscriptions that upload every receipt. `snap2sheet` is the opposite:
+Freelancers, small shops, and families all end up with a pile of receipts. Most expense apps upload every photo and charge a monthly fee. snap2sheet reads the receipt on your machine and gives you a file you own.
 
-- **Offline** — OCR and extraction run locally.
-- **Batch** — point it at a folder, get one spreadsheet.
-- **Reviewable** — edit any field before exporting.
-- **Portable** — CSV and Excel, no lock-in.
+It also runs in batch. Point it at a folder and you get one spreadsheet instead of twenty manual entries.
 
 ## What it extracts
 
-| Field | How |
+| Field | Method |
 |---|---|
-| Merchant | top-of-receipt text, filtering addresses/phone/receipt labels |
-| Date | ISO, `DD/MM/YYYY`, `MM/DD/YYYY`, month names (choose `mdy` or `dmy`) |
-| Total | rows containing `TOTAL` (not subtotal/tax), fallback to largest amount |
-| Tax | `TAX`, `VAT`, `GST`, `HST` rows |
-| Currency | ISO codes and `$ € £ ¥ ₹` symbols |
-| Invoice number | `Receipt #`, `Invoice No`, `Bill #`, `Order #` |
-| Line items | description + amount rows (with quantity parsing) |
-| Confidence + warnings | missing fields, low OCR confidence, inferred currency |
+| Merchant | top-of-receipt text, filtered to skip addresses, phone numbers, and receipt labels |
+| Date | ISO dates, DD/MM/YYYY, MM/DD/YYYY, and month names. Choose `mdy` or `dmy` order. |
+| Total | rows containing TOTAL, but not subtotal or tax. Falls back to the largest amount. |
+| Tax | TAX, VAT, GST, and HST rows |
+| Currency | ISO codes and the symbols $, EUR, GBP, JPY, and INR |
+| Invoice number | Receipt #, Invoice No, Bill #, and Order # |
+| Line items | description and amount rows, with quantity parsing |
+| Confidence and warnings | missing fields, low OCR confidence, inferred currency |
 
 ## Quickstart
 
@@ -39,7 +36,7 @@ uv venv && source .venv/bin/activate
 uv pip install -e ".[dev]"
 snap2sheet scan tests/fixtures/receipt.png
 snap2sheet batch ./receipts -o expenses.csv --xlsx expenses.xlsx
-snap2sheet serve            # http://127.0.0.1:8789
+snap2sheet serve
 ```
 
 ## CLI
@@ -48,7 +45,7 @@ snap2sheet serve            # http://127.0.0.1:8789
 # one receipt
 snap2sheet scan receipt.jpg
 
-# a folder, with European date order
+# a folder, with day-first dates
 snap2sheet batch ./receipts -o expenses.csv --xlsx expenses.xlsx --order dmy
 
 # optional LLM refinement for crumpled or unusual receipts
@@ -58,67 +55,87 @@ export SNAP2SHEET_LLM_API_KEY=...
 snap2sheet batch ./receipts -o expenses.csv --llm
 ```
 
-Example:
+Example output:
 
 ```
-        snap2sheet · 1 receipt(s)
-┏━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━┳━━━━━━┳━━━━━┳━━━━━━┓
-┃ File        ┃ Merchant          ┃ Date       ┃ Total ┃ Tax  ┃ Cur ┃ Conf ┃
-┡━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━╇━━━━━━╇━━━━━╇━━━━━━┩
-│ receipt.png │ BLUE BOTTLE COFFEE│ 2026-12-03 │ 14.58 │ 1.08 │ USD │ 0.95 │
-└─────────────┴───────────────────┴────────────┴───────┴──────┴─────┴──────┘
+snap2sheet, 1 receipt
++-------------+--------------------+------------+-------+------+-----+------+
+| File        | Merchant           | Date       | Total | Tax  | Cur | Conf |
++-------------+--------------------+------------+-------+------+-----+------+
+| receipt.png | BLUE BOTTLE COFFEE | 2026-12-03 | 14.58 | 1.08 | USD | 0.95 |
++-------------+--------------------+------------+-------+------+-----+------+
 ```
 
 ## Web UI
 
-`snap2sheet serve` opens a multi-file upload page. Every field is editable, then download CSV or Excel. Corrections stay in the browser until you export.
+`snap2sheet serve` opens a multi-file upload page. Every field is editable. Download CSV or Excel when the rows look right. Corrections stay in the browser until you export.
 
 ## How it works
 
 ```
-photo/PDF ─► render 200 DPI ─► RapidOCR ─► group rows by vertical position
-                                              │
-                          ┌───────────────────┼───────────────────┐
-                          ▼                   ▼                   ▼
-                    merchant/date        total/tax           line items
-                          │                   │                   │
-                          └──────────► Receipt ──────────► CSV / XLSX
-                                              │
-                                     optional LLM refinement
+photo or PDF
+  |
+  v
+render at 200 DPI
+  |
+  v
+RapidOCR
+  |
+  v
+group lines by vertical position
+  |
+  +--> merchant and date
+  +--> total and tax
+  +--> line items
+  |
+  v
+CSV or XLSX
 ```
 
-- **Row grouping** matters: receipt OCR often splits `TOTAL` and `$14.58` into separate boxes.
-- **Heuristics first**, so the default path is fully offline and deterministic.
-- **Optional LLM** (any OpenAI-compatible endpoint) only rewrites fields; it never invents a missing receipt.
+Row grouping is the important part. Receipt OCR often splits `TOTAL` and `$14.58` into separate boxes. Grouping by vertical position puts them back on the same row.
+
+The default path is fully offline and deterministic. The optional LLM pass can rewrite fields, but it never invents a missing receipt.
 
 ## Accuracy and limits
 
-Tested on clean, synthetic receipts (see `tests/`). Real-world receipts are harder:
+The tests use clean, generated receipts. Real receipts are harder:
 
-- crumpled, faded, thermal paper, skewed photos;
-- handwritten totals and tips;
-- multi-currency receipts and tax-inclusive totals;
-- invoices spanning several pages (only the first page is read today);
-- ambiguous dates (`03/04/2026`) — pick `--order mdy` or `dmy`.
+- crumpled, faded, thermal paper, or skewed photos
+- handwritten totals and tips
+- multiple currencies and tax-inclusive totals
+- invoices that span several pages (only the first page is read today)
+- ambiguous dates such as 03/04/2026, which need `--order mdy` or `dmy`
 
-Low-confidence extractions are flagged; always review before filing.
+Low-confidence rows are flagged. Review them before filing.
 
 ## Privacy
 
 - No network calls in the default path.
-- The web UI writes uploads to `~/.snap2sheet/out`; delete them anytime.
-- The optional LLM pass sends only OCR text, never the image.
+- The web UI writes uploads to `~/.snap2sheet/out`. Delete them at any time.
+- The optional LLM pass sends OCR text only, never the image.
+
+## Tests
+
+```bash
+pytest -q
+```
+
+The suite has 8 tests covering amount parsing, date order, row grouping, extraction, CSV, and Excel.
 
 ## Roadmap
 
-- [ ] Duplicate-receipt detection across batches
-- [ ] Multi-page invoices
-- [ ] Tip and discount handling
-- [ ] Category suggestions from line items
-- [ ] QuickBooks / Xero CSV presets
-- [ ] Mobile-friendly PWA
-- [ ] Public benchmark of field-level accuracy on real receipts
+- duplicate receipt detection across batches
+- multi-page invoices
+- tip and discount handling
+- category suggestions from line items
+- QuickBooks and Xero CSV presets
+- a mobile-friendly PWA
+- a public benchmark of field-level accuracy on real receipts
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-MIT.
+MIT. See [THIRD_PARTY.md](THIRD_PARTY.md) for the OCR and PDF dependencies.
