@@ -176,7 +176,7 @@ Euro and pound symbols can be misread. The currency field is editable for that r
 pytest -q
 ```
 
-The suite has 22 tests and covers amount parsing, date order, row grouping, extraction, CSV, Excel, duplicate normalization, the CLI batch output, and the web scan response.
+The suite has 23 tests and covers amount parsing, date order, row grouping, extraction, CSV, Excel, duplicate normalization, the CLI batch output, and the web scan response.
 
 ## Roadmap
 
