@@ -33,7 +33,7 @@ SNAP2SHEET_INDRA_DIR=/path/to/indra python benchmarks/bench_extraction.py
 
 | Backend | Merchant | Date | Total | Tax | Currency | Invoice | Overall | Time |
 |---|---|---|---|---|---|---|---|---|
-| RapidOCR | 0.167 | 1.000 | 1.000 | 1.000 | 0.333 | 1.000 | 0.750 | 16.1 s |
+| RapidOCR | 0.667 | 1.000 | 1.000 | 0.833 | 0.333 | 1.000 | 0.806 | 6.0 s |
 | Indra OCR | 1.000 | 1.000 | 1.000 | 1.000 | 0.333 | 1.000 | 0.889 | 4.0 s |
 
 Indra reads the merchant title correctly and is about four times faster. Both backends read dates, totals, tax, and invoice numbers correctly after the subtotal correction.
@@ -42,7 +42,7 @@ Indra reads the merchant title correctly and is about four times faster. Both ba
 
 Both backends miss EUR and GBP symbols. The euro sign is read as `R`, and the pound sign as `W` or `B`. That turns `€14.07` into `814.07` before the subtotal correction fixes the total.
 
-Three EUR or GBP receipts out of twelve fail on currency, which matches the 0.333 accuracy. USD receipts pass.
+Three EUR or GBP receipts out of twelve fail on currency, which matches the 0.333 accuracy. USD receipts pass. The fixture generator now uses a font with proper spacing and visible `€`/`£` glyphs, but RapidOCR still drops those symbols while reading `$`.
 
 This is why the review screen makes currency editable. A local vision model would be the next step for symbol-level accuracy.
 

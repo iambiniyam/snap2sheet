@@ -69,7 +69,7 @@ Twelve generated receipts with known fields. See [docs/evaluation.md](docs/evalu
 
 | Backend | Merchant | Total | Currency | Overall | Time |
 |---|---|---|---|---|---|
-| RapidOCR | 0.167 | 1.000 | 0.333 | 0.750 | 16.1 s |
+| RapidOCR | 0.667 | 0.833 | 0.333 | 0.806 | 6.0 s |
 | Indra OCR | 1.000 | 1.000 | 0.333 | 0.889 | 4.0 s |
 
 Indra reads merchant titles correctly and is faster. Both backends miss euro and pound symbols on some receipts, which is why currency stays editable in the review screen.
@@ -154,7 +154,7 @@ The default path is fully offline and deterministic. The optional LLM pass can r
 
 ## Accuracy and limits
 
-The benchmark uses clean, generated receipts. Real receipts are harder:
+The benchmark uses clean, generated receipts. Real receipts are harder. RapidOCR reads `$` but drops `€` and `£` on this fixture font, so currency remains a manual field for those receipts:
 
 - crumpled, faded, thermal paper, or skewed photos
 - handwritten totals and tips

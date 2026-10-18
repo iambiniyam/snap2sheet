@@ -43,8 +43,20 @@ def make_receipt(index: int, rng: random.Random) -> dict:
     width, height = 900, 1150
     image = Image.new("RGB", (width, height), "white")
     draw = ImageDraw.Draw(image)
-    title_font = ImageFont.load_default(size=34)
-    font = ImageFont.load_default(size=26)
+    font_path = None
+    for candidate in (
+        "/System/Library/Fonts/Supplemental/Arial.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+    ):
+        if Path(candidate).exists():
+            font_path = candidate
+            break
+    if font_path:
+        title_font = ImageFont.truetype(font_path, 34)
+        font = ImageFont.truetype(font_path, 26)
+    else:
+        title_font = ImageFont.load_default(size=34)
+        font = ImageFont.load_default(size=26)
     y = 50
 
     draw.text((60, y), merchant, fill="black", font=title_font)
