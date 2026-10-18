@@ -5,6 +5,12 @@
 - RapidOCR, Apache-2.0. The ONNX models ship with the package.
 - ONNX Runtime, MIT.
 
+## Indra OCR (optional)
+
+- Code: Apache-2.0.
+- Model weights: OpenRAIL-M. Free for research, personal use, and startups under $20M funding or revenue. Not for building a competing OCR API.
+- Downloaded only when `python scripts/download_models.py` is run.
+
 ## PDF
 
 - PyMuPDF, AGPL-3.0 or a commercial license from Artifex. Review this before redistributing the project as part of a commercial product.

@@ -13,6 +13,7 @@ from rich.table import Table
 from .export import write_csv, write_xlsx
 from .extract import extract_file
 from .llm import LLMSettings, refine
+from .ocr import backend_status
 
 app = typer.Typer(add_completion=False, help="Turn receipt photos into CSV or Excel, offline.")
 console = Console()
@@ -42,8 +43,8 @@ def _table(receipts) -> Table:
     return table
 
 
-def _scan(path: Path, order: str, use_llm: bool):
-    receipt = extract_file(path, order=order)
+def _scan(path: Path, order: str, use_llm: bool, ocr: str = "auto"):
+    receipt = extract_file(path, order=order, ocr_backend=ocr)
     if use_llm:
         settings = LLMSettings.from_env()
         if not settings.ready:
@@ -58,10 +59,11 @@ def scan(
     file: Path = typer.Argument(..., exists=True, readable=True),
     order: str = typer.Option("mdy", help="Date order: mdy or dmy."),
     llm: bool = typer.Option(False, "--llm", help="Refine fields with an OpenAI-compatible LLM."),
+    ocr: str = typer.Option("auto", "--ocr", help="auto, rapidocr, or indra."),
     json_out: bool = typer.Option(False, "--json"),
 ) -> None:
     """Extract one receipt and print the fields."""
-    receipt = _scan(file, order, llm)
+    receipt = _scan(file, order, llm, ocr)
     if json_out:
         typer.echo(json.dumps(receipt.to_dict(), indent=2, ensure_ascii=False))
         return
@@ -79,6 +81,7 @@ def batch(
     xlsx: Path | None = typer.Option(None, "--xlsx"),
     order: str = typer.Option("mdy"),
     llm: bool = typer.Option(False, "--llm"),
+    ocr: str = typer.Option("auto", "--ocr", help="auto, rapidocr, or indra."),
     recursive: bool = typer.Option(False, "--recursive", "-r"),
 ) -> None:
     """Scan a folder of receipts and write CSV (and optionally Excel)."""
@@ -96,7 +99,7 @@ def batch(
             console.print(f"[yellow]skip duplicate:[/yellow] {path.name} (same as {seen[digest]})")
             continue
         seen[digest] = path.name
-        receipts.append(_scan(path, order, llm))
+        receipts.append(_scan(path, order, llm, ocr))
 
     write_csv(receipts, output)
     console.print(_table(receipts))
@@ -122,4 +125,6 @@ def doctor() -> None:
 
     console.print(f"pymupdf: [bold]{pymupdf.__version__}[/bold]")
     console.print(f"openpyxl: [bold]{openpyxl.__version__}[/bold]")
+    status = backend_status()
+    console.print(f"OCR: [bold]{status['auto']}[/bold] (indra installed: {status['indra']})")
     console.print("[green]ready[/green]")

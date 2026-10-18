@@ -19,6 +19,7 @@ MONEY = re.compile(
 TOTAL = re.compile(r"\b(grand\s+total|total\s+due|amount\s+due|balance\s+due|total)\b", re.I)
 EXCLUDE_TOTAL = re.compile(r"\b(subtotal|sub-total|tax|vat|gst|hst|discount|items|qty)\b", re.I)
 TAX = re.compile(r"\b(vat|tax|gst|hst|sales\s+tax)\b", re.I)
+SUBTOTAL = re.compile(r"\b(subtotal|sub-total|net\s+total)\b", re.I)
 INVOICE = re.compile(
     r"\b(?:invoice|inv|receipt|bill|order)\s*(?:#|no\.?|number|id)?\s*[:\-]?\s*([A-Z0-9][A-Z0-9\-/]{2,})",
     re.I,
@@ -131,6 +132,15 @@ def _total(rows: list[str]) -> tuple[float | None, str | None]:
     return None, None
 
 
+def _subtotal(rows: list[str]) -> float | None:
+    for row in rows:
+        if SUBTOTAL.search(row):
+            amount, _currency = find_amount(row)
+            if amount is not None:
+                return amount
+    return None
+
+
 def _tax(rows: list[str]) -> float | None:
     for row in rows:
         if TAX.search(row) and not re.search(r"tax\s+invoice", row, re.I):
@@ -207,6 +217,16 @@ def extract_receipt(
     merchant = _merchant(rows)
     total, total_currency = _total(rows)
     tax = _tax(rows)
+    subtotal = _subtotal(rows)
+    if subtotal is not None and tax is not None:
+        computed = round(subtotal + tax, 2)
+        if total is None or total > computed * 1.5 or total < computed * 0.5:
+            total = computed
+            receipt_total_corrected = True
+        else:
+            receipt_total_corrected = False
+    else:
+        receipt_total_corrected = False
     currency, warnings = _currency(rows, total_currency)
     invoice_number = _invoice(rows)
     date = parse_date(text, order=order)
@@ -237,6 +257,8 @@ def extract_receipt(
         receipt.warnings.append("date not found")
     if total is None:
         receipt.warnings.append("total not found. Check manually.")
+    if receipt_total_corrected:
+        receipt.warnings.append("total corrected from subtotal and tax")
     if ocr_confidence < 0.85:
         score -= 0.10
         receipt.warnings.append(f"low OCR confidence ({ocr_confidence:.2f})")
@@ -244,6 +266,11 @@ def extract_receipt(
     return receipt
 
 
-def extract_file(path: Path | str, order: str = "mdy", source: str | None = None) -> Receipt:
-    rows, confidence, _text = read_text(path)
+def extract_file(
+    path: Path | str,
+    order: str = "mdy",
+    source: str | None = None,
+    ocr_backend: str = "auto",
+) -> Receipt:
+    rows, confidence, _text = read_text(path, backend=ocr_backend)
     return extract_receipt(source or Path(path).name, rows, confidence, order=order)

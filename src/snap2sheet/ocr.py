@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+import tempfile
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -9,6 +11,8 @@ from pathlib import Path
 import cv2
 import numpy as np
 import pymupdf as fitz
+
+from .config import indra_dir
 
 
 @dataclass(frozen=True, slots=True)
@@ -18,11 +22,77 @@ class TextLine:
     confidence: float = 1.0
 
 
+class OCRUnavailable(RuntimeError):
+    """Raised when the requested OCR backend is not installed."""
+
+
+def _indra_ready() -> bool:
+    try:
+        import indra_ocr  # noqa: F401
+    except ImportError:
+        return False
+    folder = indra_dir()
+    return all((folder / name).exists() for name in ("det.onnx", "rec.onnx", "meta.json"))
+
+
+def resolve_backend(name: str = "auto") -> str:
+    name = (name or "auto").lower()
+    if name == "auto":
+        return "indra" if _indra_ready() else "rapidocr"
+    if name in {"rapid", "rapidocr"}:
+        return "rapidocr"
+    if name == "indra":
+        if not _indra_ready():
+            raise OCRUnavailable(
+                "Indra OCR is not installed or its models are missing. "
+                "Run: python scripts/download_models.py --with-indra"
+            )
+        return "indra"
+    raise ValueError(f"unknown OCR backend: {name}")
+
+
 @lru_cache(maxsize=1)
 def _engine():
     from rapidocr_onnxruntime import RapidOCR
 
     return RapidOCR()
+
+
+@lru_cache(maxsize=2)
+def _indra(model_path: str, threads: int):
+    import indra_ocr
+
+    return indra_ocr.load(path=model_path, threads=threads)
+
+
+def _rapid_lines(image: np.ndarray) -> list[TextLine]:
+    result, _elapsed = _engine()(image)
+    lines: list[TextLine] = []
+    for item in result or []:
+        box, text, score = item[0], item[1], float(item[2])
+        xs = [point[0] for point in box]
+        ys = [point[1] for point in box]
+        lines.append(TextLine(str(text), (min(xs), min(ys), max(xs), max(ys)), score))
+    return lines
+
+
+def _indra_lines(image: np.ndarray) -> list[TextLine]:
+    threads = int(os.getenv("SNAP2SHEET_INDRA_THREADS", "2"))
+    converter = _indra(str(indra_dir()), threads)
+    handle = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
+    path = Path(handle.name)
+    handle.close()
+    try:
+        if not cv2.imwrite(str(path), image):
+            raise OCRUnavailable("could not prepare the image for Indra OCR")
+        lines: list[TextLine] = []
+        for item in converter.convert(str(path)):
+            page = item[1] if isinstance(item, tuple) else item
+            for line in page.lines:
+                lines.append(TextLine(str(line.text), tuple(line.box), float(line.conf)))
+        return lines
+    finally:
+        path.unlink(missing_ok=True)
 
 
 def _render_pdf(path: Path, dpi: int = 200) -> np.ndarray:
@@ -46,17 +116,19 @@ def load_image(path: Path | str, dpi: int = 200) -> np.ndarray:
     return image
 
 
-def ocr_lines(image: np.ndarray) -> list[TextLine]:
-    result, _elapsed = _engine()(image)
-    lines: list[TextLine] = []
-    for item in result or []:
-        box, text, score = item[0], item[1], float(item[2])
-        xs = [point[0] for point in box]
-        ys = [point[1] for point in box]
-        lines.append(
-            TextLine(str(text), (min(xs), min(ys), max(xs), max(ys)), score)
-        )
-    return lines
+def backend_status() -> dict[str, object]:
+    return {
+        "auto": resolve_backend("auto"),
+        "rapidocr": True,
+        "indra": _indra_ready(),
+        "indra_dir": str(indra_dir()),
+    }
+
+
+def ocr_lines(image: np.ndarray, backend: str = "auto") -> list[TextLine]:
+    selected = resolve_backend(backend)
+    lines = _indra_lines(image) if selected == "indra" else _rapid_lines(image)
+    return [line for line in lines if line.text.strip() and line.confidence >= 0.5]
 
 
 def group_rows(lines: list[TextLine], tolerance: float = 18.0) -> list[str]:
@@ -80,9 +152,11 @@ def group_rows(lines: list[TextLine], tolerance: float = 18.0) -> list[str]:
     return output
 
 
-def read_text(path: Path | str, dpi: int = 200) -> tuple[list[str], float, str]:
+def read_text(
+    path: Path | str, dpi: int = 200, backend: str = "auto"
+) -> tuple[list[str], float, str]:
     """Return (rows, average OCR confidence, joined text)."""
-    lines = ocr_lines(load_image(path, dpi=dpi))
+    lines = ocr_lines(load_image(path, dpi=dpi), backend=backend)
     confidence = sum(line.confidence for line in lines) / len(lines) if lines else 0.0
     rows = group_rows(lines)
     return rows, confidence, "\n".join(rows)

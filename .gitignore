@@ -10,3 +10,5 @@ build/
 *.csv
 out/
 .DS_Store
+
+benchmarks/receipts/

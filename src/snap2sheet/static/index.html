@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>snap2sheet: receipts to spreadsheet</title>
+  <link rel="stylesheet" href="/static/app.css?v=3">
+  <script src="/static/app.js?v=3" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="masthead shell">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2z"></path>
+          <path d="M9 8h6M9 12h6"></path>
+        </svg>
+      </span>
+      <div>
+        <a class="brand-name" href="/">snap2sheet</a>
+        <p class="brand-tag">Receipt photos in, a clean spreadsheet out.</p>
+      </div>
+    </div>
+    <p class="local-badge"><span class="local-dot" aria-hidden="true"></span> Local only</p>
+  </header>
+
+  <main id="main" class="shell">
+    <section class="panel" aria-labelledby="page-title">
+      <h1 id="page-title" class="sr-only">Scan receipts</h1>
+
+      <label class="drop" id="drop" for="files">
+        <span class="drop-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 16V4"></path><path d="m7 9 5-5 5 5"></path><path d="M5 16v3h14v-3"></path>
+          </svg>
+        </span>
+        <strong>Drop receipts here</strong>
+        <span class="drop-help">or click to choose. JPG, PNG, or PDF. Multiple files supported.</span>
+      </label>
+      <input id="files" type="file" accept="application/pdf,image/*" multiple hidden>
+      <ul id="file-list" class="file-list" aria-live="polite"></ul>
+
+      <div class="controls">
+        <div class="field">
+          <label for="ocr">OCR engine</label>
+          <select id="ocr">
+            <option value="auto">Auto (best available)</option>
+            <option value="rapidocr">RapidOCR</option>
+            <option value="indra">Indra OCR (optional)</option>
+          </select>
+        </div>
+        <button id="scan" class="btn" type="button">Scan receipts</button>
+      </div>
+      <p id="status" class="status" role="status" aria-live="polite"></p>
+    </section>
+
+    <section id="result" class="result" hidden aria-labelledby="result-title">
+      <div class="result-head">
+        <h2 id="result-title" tabindex="-1">Review</h2>
+        <p id="summary" class="meta"></p>
+      </div>
+
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>File</th>
+                <th>Merchant</th>
+                <th>Date</th>
+                <th>Total</th>
+                <th>Tax</th>
+                <th>Cur</th>
+                <th>Invoice</th>
+                <th>Conf</th>
+                <th><span class="sr-only">Remove</span></th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+        <p id="validation" class="validation" role="status" aria-live="polite"></p>
+      </div>
+
+      <div class="actions">
+        <button id="csv" class="btn" type="button">Download CSV</button>
+        <button id="xlsx" class="btn ghost" type="button">Download Excel</button>
+      </div>
+      <p class="note">Everything stays on this machine. Edit any field before export. Use the date format your accountant expects.</p>
+    </section>
+  </main>
+
+  <footer class="footer shell">
+    <p><strong>Local only.</strong> Receipts are processed on this machine and are not uploaded. <a href="https://github.com/iambiniyam/snap2sheet">Source on GitHub</a></p>
+  </footer>
+</body>
+</html>

@@ -1,6 +1,6 @@
 [project]
 name = "snap2sheet"
-version = "0.1.0"
+version = "0.2.0"
 description = "Turn receipt and invoice photos into clean CSV or Excel, offline."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -30,6 +30,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8.3", "ruff>=0.6", "httpx2"]
+indra = ["indra-ocr>=0.3.2"]
 
 [project.scripts]
 snap2sheet = "snap2sheet.cli:app"
