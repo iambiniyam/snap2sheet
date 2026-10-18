@@ -1,0 +1,50 @@
+[project]
+name = "snap2sheet"
+version = "0.1.0"
+description = "Turn receipt and invoice photos into clean CSV or Excel, offline."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Biniyam Gashaw" }]
+keywords = ["receipts", "ocr", "expenses", "csv", "excel", "offline", "bookkeeping"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+]
+dependencies = [
+  "pymupdf>=1.24",
+  "pillow>=10.4",
+  "numpy>=1.26",
+  "opencv-python-headless>=4.10",
+  "rapidocr-onnxruntime>=1.4",
+  "typer>=0.12",
+  "rich>=13.9",
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.32",
+  "python-multipart>=0.0.9",
+  "pydantic>=2.9",
+  "openpyxl>=3.1",
+  "httpx>=0.27",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.3", "ruff>=0.6", "httpx2"]
+
+[project.scripts]
+snap2sheet = "snap2sheet.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/snap2sheet"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
